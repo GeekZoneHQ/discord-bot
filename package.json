@@ -1,0 +1,24 @@
+{
+  "name": "discord-bot",
+  "version": "1.0.0",
+  "description": "A discord bot developed for Geek.Zone to aid stand-up meetings",
+  "main": "index.js",
+  "dependencies": {
+    "discord.js": "^12.5.1",
+    "jshint": "^2.12.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GeekZoneHQ/discord-bot.git"
+  },
+  "author": "Sam Winterhalder",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GeekZoneHQ/discord-bot/issues"
+  },
+  "homepage": "https://github.com/GeekZoneHQ/discord-bot#readme"
+}
