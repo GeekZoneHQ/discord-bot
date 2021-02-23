@@ -9,6 +9,6 @@ module.exports = {
             return message.channel.send('bar');
         }
         
-        message.channel.send(`Command name: ${command}\nArguements: ${args}`);
+        message.channel.send(`Command name: ${message}\nArguements: ${args}`);
 	},
 };
