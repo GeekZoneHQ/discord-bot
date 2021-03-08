@@ -1,3 +1,6 @@
 {
-    "prefix": "!"
+    "prefix": "!",
+    "task1": {
+        "message": "This is the message to display."
+    }
 }
