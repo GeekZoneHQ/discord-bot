@@ -44,13 +44,13 @@ def get_task_start(task):
 
 
 def get_task_interval(task):
-    pass
+    interval_d, interval_t = config[task]["interval"].split(" ")
+    hours, minutes, seconds = interval_t.split(":")
+    hours = hours + interval_d * 24
+    return int(hours), int(minutes), int(seconds)
 
 
-get_task_interval("msg1")
-
-
-@tasks.loop(seconds=5)
+@tasks.loop()
 async def message1():
     conf = config["msg1"]
     await client.get_channel(conf["channel"]).send(conf["message"])
@@ -62,7 +62,11 @@ async def before():
     for _ in range(60*60*24*7):
         if dt.datetime.now() >= start_time:
             print('It is time')
-            print(dt.datetime.now())
+            hours, minutes, seconds = get_task_interval("msg1")
+            message1.change_interval(
+                hours=hours,
+                minutes=minutes,
+                seconds=seconds)
             return
         await asyncio.sleep(1)
     await client.wait_until_ready()
