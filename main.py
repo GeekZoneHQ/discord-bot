@@ -17,8 +17,10 @@ with open('./config.json') as f:
 f.close()
 PREFIX = config["prefix"]
 
-client = commands.Bot(PREFIX)
-status = cycle(['Status 1', 'Status 2'])
+intents = discord.Intents.default()
+intents.members = True
+
+client = commands.Bot(command_prefix=PREFIX, intents=intents)
 
 
 @client.command()
@@ -53,7 +55,11 @@ def get_task_interval(task):
 @tasks.loop()
 async def message1():
     conf = config["msg1"]
-    await client.get_channel(conf["channel"]).send(conf["message"])
+    guild = client.get_guild(config["guild"])
+    role = guild.get_role(config["role"])
+    for user in guild.members:
+        if role in user.roles:
+            await user.send(conf["message"])
 
 
 @message1.before_loop
