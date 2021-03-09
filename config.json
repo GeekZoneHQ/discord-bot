@@ -1,6 +1,12 @@
 {
     "prefix": "!",
-    "task1": {
-        "message": "This is the message to display."
+
+    "role": 477597529416925212,
+
+    "msg1": {
+        "start": "2021-03-09 00:20:00",
+        "interval": "HH:MM:SS",
+        "channel": 813465670477152266,
+        "message": "This is the message to send."
     }
 }
