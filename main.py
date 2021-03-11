@@ -7,7 +7,7 @@ import datetime as dt
 
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
-import sqlite3
+from db import create_db
 
 load_dotenv()
 TOKEN = os.environ.get("TOKEN")
@@ -94,41 +94,7 @@ async def before():
 @client.event
 async def on_ready():
     print("Initialzing database")
-    db = sqlite3.connect('db.sqlite3')
-    cursor = db.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS bot_message (
-            bot_message_id INTEGER NOT NULL PRIMARY KEY,
-            text TEXT
-        )
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS user (
-            user_id INTEGER NOT NULL PRIMARY KEY
-        )
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS bot_message_sent (
-            bot_message_sent_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            bot_message_id INTEGER,
-            user_id INTEGER,
-            datetime DATETIME,
-            FOREIGN KEY (bot_message_id)
-                REFERENCES bot_message (bot_message_id),
-            FOREIGN KEY (user_id)
-                REFERENCES user (user_id)
-        )
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS user_response (
-            response_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            text TEXT,
-            datetime DATETIME,
-            FOREIGN KEY (user_id)
-                REFERENCES user (user_id)
-        )
-    ''')
+    create_db()
     print("Database initialzed")
     print("Ready")
     message1.start()
