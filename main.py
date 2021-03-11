@@ -7,7 +7,7 @@ import datetime as dt
 
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
-from itertools import cycle
+import sqlite3
 
 load_dotenv()
 TOKEN = os.environ.get("TOKEN")
@@ -39,14 +39,14 @@ async def reload(ctx, extension):
     client.load_extension(f'commands.{extension}')
 
 
-def get_task_start(task):
+def get_task_start():
     start_datetime = dt.datetime.strptime(
-        config[task]["start"], '%Y-%m-%d %H:%M:%S')
+        config["start"], '%Y-%m-%d %H:%M:%S')
     return start_datetime
 
 
-def get_task_interval(task):
-    interval_d, interval_t = config[task]["interval"].split(" ")
+def get_task_interval():
+    interval_d, interval_t = config["interval"].split(" ")
     hours, minutes, seconds = interval_t.split(":")
     hours = hours + interval_d * 24
     return int(hours), int(minutes), int(seconds)
@@ -54,21 +54,34 @@ def get_task_interval(task):
 
 @tasks.loop()
 async def message1():
-    conf = config["msg1"]
     guild = client.get_guild(config["guild"])
     role = guild.get_role(config["role"])
     for user in guild.members:
         if role in user.roles:
-            await user.send(conf["message"])
+            await user.send(config["msg1"])
+
+            def is_pog(m):
+                return (m.author == user
+                        and isinstance(m.channel, discord.channel.DMChannel))
+
+            try:
+                guess = await client.wait_for(
+                    'message', check=is_pog, timeout=9.0
+                )
+            except asyncio.TimeoutError:
+                return await user.send("9 seconds have passed")
+
+            if guess:
+                await user.send(guess.content)
 
 
 @message1.before_loop
 async def before():
-    start_time = get_task_start("msg1")
+    start_time = get_task_start()
     for _ in range(60*60*24*7):
         if dt.datetime.now() >= start_time:
             print('It is time')
-            hours, minutes, seconds = get_task_interval("msg1")
+            hours, minutes, seconds = get_task_interval()
             message1.change_interval(
                 hours=hours,
                 minutes=minutes,
@@ -80,8 +93,51 @@ async def before():
 
 @client.event
 async def on_ready():
+    print("Initialzing database")
+    db = sqlite3.connect('db.sqlite3')
+    cursor = db.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS bot_message (
+            bot_message_id INTEGER NOT NULL PRIMARY KEY,
+            text TEXT
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user (
+            user_id INTEGER NOT NULL PRIMARY KEY
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS bot_message_sent (
+            bot_message_sent_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            bot_message_id INTEGER,
+            user_id INTEGER,
+            datetime DATETIME,
+            FOREIGN KEY (bot_message_id)
+                REFERENCES bot_message (bot_message_id),
+            FOREIGN KEY (user_id)
+                REFERENCES user (user_id)
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_response (
+            response_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            text TEXT,
+            datetime DATETIME,
+            FOREIGN KEY (user_id)
+                REFERENCES user (user_id)
+        )
+    ''')
+    print("Database initialzed")
     print("Ready")
     message1.start()
+
+
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        return
 
 
 for f_name in os.listdir('commands'):
