@@ -2,11 +2,12 @@
     "prefix": "!",
 
     "guild": 476899972546297866,
-    "role": 477597529416925212,
+    "role": 479295034106314752,
 
-    "start": "2021-03-11 00:46:45",
-    "interval": "00 00:00:30",
+    "start": "2021-03-18 22:31:20",
+    "interval": "00 00:00:45",
 
-    "msg1": "This is the first message to send."
-     
+    "msg1": "This is the first message to send.",
+    "msg2": "This is the second message to send.",
+    "msg3": "This is the third message to send."
 }
