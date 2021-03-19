@@ -4,23 +4,33 @@ import json
 
 import asyncio
 import datetime as dt
+import sqlite3
 
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 from db import create_db
 
 load_dotenv()
-TOKEN = os.environ.get("TOKEN")
+TOKEN = os.environ.get('TOKEN')
 
 with open('./config.json') as f:
     config = json.load(f)
 f.close()
-PREFIX = config["prefix"]
+PREFIX = config['prefix']
 
 intents = discord.Intents.default()
 intents.members = True
 
 client = commands.Bot(command_prefix=PREFIX, intents=intents)
+
+try:
+    os.remove('db.sqlite3')
+except PermissionError:
+    print("DB open")
+except FileNotFoundError:
+    print("DB does not exist yet")
+db = sqlite3.connect('db.sqlite3')
+cursor = db.cursor()
 
 
 @client.command()
@@ -41,48 +51,44 @@ async def reload(ctx, extension):
 
 def get_task_start():
     start_datetime = dt.datetime.strptime(
-        config["start"], '%Y-%m-%d %H:%M:%S')
+        config['start'], '%Y-%m-%d %H:%M:%S')
     return start_datetime
 
 
 def get_task_interval():
-    interval_d, interval_t = config["interval"].split(" ")
+    interval_d, interval_t = config['interval'].split(' ')
     hours, minutes, seconds = interval_t.split(":")
     hours = hours + interval_d * 24
     return int(hours), int(minutes), int(seconds)
 
 
 @tasks.loop()
-async def message1():
-    guild = client.get_guild(config["guild"])
-    role = guild.get_role(config["role"])
+async def message():
+    guild = client.get_guild(config['guild'])
+    role = guild.get_role(config['role'])
     for user in guild.members:
         if role in user.roles:
+            sql = (f'''INSERT OR IGNORE INTO user
+                       (user_id)
+                       VALUES ({user.id})''')
+            cursor.execute(sql)
+            print('Sending first message.')
             await user.send(config["msg1"])
-
-            def is_pog(m):
-                return (m.author == user
-                        and isinstance(m.channel, discord.channel.DMChannel))
-
-            try:
-                guess = await client.wait_for(
-                    'message', check=is_pog, timeout=9.0
-                )
-            except asyncio.TimeoutError:
-                return await user.send("9 seconds have passed")
-
-            if guess:
-                await user.send(guess.content)
+            sql = ('''INSERT INTO bot_message_sent
+                      (bot_message_id, user_id, datetime)
+                      VALUES (1, ?, ?)''')
+            val = (user.id, dt.datetime.now())
+            cursor.execute(sql, val)
+            db.commit()
 
 
-@message1.before_loop
+@message.before_loop
 async def before():
     start_time = get_task_start()
     for _ in range(60*60*24*7):
         if dt.datetime.now() >= start_time:
-            print('It is time')
             hours, minutes, seconds = get_task_interval()
-            message1.change_interval(
+            message.change_interval(
                 hours=hours,
                 minutes=minutes,
                 seconds=seconds)
@@ -93,17 +99,45 @@ async def before():
 
 @client.event
 async def on_ready():
-    print("Initialzing database")
+    print('Initialzing database')
     create_db()
-    print("Database initialzed")
-    print("Ready")
-    message1.start()
+    print('Database initialzed')
+    print('Ready')
+    message.start()
 
 
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
+
+    if isinstance(message.channel, discord.channel.DMChannel):
+        sql = (f'''SELECT * FROM bot_message_sent
+                   WHERE user_id = {message.author.id}
+                   ORDER BY datetime DESC''')
+        cursor.execute(sql)
+        try:
+            recent = cursor.fetchone()
+            if recent[1] is None:
+                sql = ('''INSERT INTO user_response
+                          (user_id, text, datetime)
+                          VALUES (?, ?, ?)''')
+                val = (message.author.id, message.content, message.created_at)
+                cursor.execute(sql, val)
+
+                sql = ('SELECT MAX(response_id) FROM user_response')
+                cursor.execute(sql)
+                resp_id = cursor.fetchone()
+
+                sql = ('''UPDATE bot_message_sent
+                          SET response_id = ?
+                          WHERE bot_message_sent_id = ?''')
+                val = (resp_id[0], recent[0])
+                cursor.execute(sql, val)
+                db.commit()
+                # todo: send next message if applicable
+        except IndexError:
+            print(f"Not expecting message from {message.author.id}")
 
 
 for f_name in os.listdir('commands'):
