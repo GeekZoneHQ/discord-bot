@@ -72,7 +72,7 @@ async def message():
                        (user_id)
                        VALUES ({user.id})''')
             cursor.execute(sql)
-            print('Sending first message.')
+            print(f'Sending first message to: {str(user)}')
             await user.send(config["msg1"])
             sql = ('''INSERT INTO bot_message_sent
                       (bot_message_id, user_id, datetime)
@@ -135,7 +135,33 @@ async def on_message(message):
                 val = (resp_id[0], recent[0])
                 cursor.execute(sql, val)
                 db.commit()
-                # todo: send next message if applicable
+
+                if recent[2] == 1:
+                    print(f'Sending second message to: {str(message.author)}')
+                    await message.author.send(config["msg2"])
+                    sql = ('''INSERT INTO bot_message_sent
+                              (bot_message_id, user_id, datetime)
+                              VALUES (2, ?, ?)''')
+                    val = (message.author.id, dt.datetime.now())
+                    cursor.execute(sql, val)
+                    db.commit()
+                elif recent[2] == 2:
+                    print(f'Sending third message to: {str(message.author)}')
+                    await message.author.send(config["msg3"])
+                    sql = ('''INSERT INTO bot_message_sent
+                              (bot_message_id, user_id, datetime)
+                              VALUES (3, ?, ?)''')
+                    val = (message.author.id, dt.datetime.now())
+                    cursor.execute(sql, val)
+                    db.commit()
+                elif recent[2] == 3:
+                    print(f'Received all messages from {str(message.author)}')
+                    sql = (f'''SELECT text FROM user_response
+                               WHERE user_id = {str(message.author.id)}
+                               ORDER BY response_id DESC''')
+                    cursor.execute(sql)
+                    messages = cursor.fetchmany(3)
+                    print(messages)
         except IndexError:
             print(f"Not expecting message from {message.author.id}")
 
