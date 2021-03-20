@@ -7,7 +7,8 @@
     "start": "2021-03-18 22:31:20",
     "interval": "00 00:00:45",
 
-    "msg1": "This is the first message to send.",
-    "msg2": "This is the second message to send.",
-    "msg3": "This is the third message to send."
+    "msg1": "Good morning! How are you today?",
+    "msg2": "What did you do this week?",
+    "msg3": "What will you do in the coming week?",
+    "msg4": "Anything blocking your progress?"
 }
