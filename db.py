@@ -50,6 +50,7 @@ def create_db():
         cursor.execute(sql, (1, config['msg1']))
         cursor.execute(sql, (2, config['msg2']))
         cursor.execute(sql, (3, config['msg3']))
+        cursor.execute(sql, (4, config['msg4']))
         print("Messages written to DB")
     except sqlite3.IntegrityError:
         sql = ('''UPDATE bot_message
@@ -58,5 +59,6 @@ def create_db():
         cursor.execute(sql, (config['msg1'], 1))
         cursor.execute(sql, (config['msg2'], 2))
         cursor.execute(sql, (config['msg3'], 3))
+        cursor.execute(sql, (config['msg4'], 4))
         print("Messages overwritten in DB")
     db.commit()

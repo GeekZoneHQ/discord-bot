@@ -85,7 +85,7 @@ async def message():
 @message.before_loop
 async def before():
     start_time = get_task_start()
-    for _ in range(60*60*24*7):
+    for _ in range(60*60*24*7*2):
         if dt.datetime.now() >= start_time:
             hours, minutes, seconds = get_task_interval()
             message.change_interval(
@@ -155,15 +155,24 @@ async def on_message(message):
                     cursor.execute(sql, val)
                     db.commit()
                 elif recent[2] == 3:
+                    print(f'Sending fourth message to: {str(message.author)}')
+                    await message.author.send(config["msg4"])
+                    sql = ('''INSERT INTO bot_message_sent
+                              (bot_message_id, user_id, datetime)
+                              VALUES (4, ?, ?)''')
+                    val = (message.author.id, dt.datetime.now())
+                    cursor.execute(sql, val)
+                    db.commit()
+                elif recent[2] == 4:
                     print(f'Received all messages from {str(message.author)}')
                     sql = (f'''SELECT text FROM user_response
                                WHERE user_id = {str(message.author.id)}
                                ORDER BY response_id DESC''')
                     cursor.execute(sql)
-                    messages = cursor.fetchmany(3)
+                    messages = cursor.fetchmany(4)
                     print(messages)
-        except IndexError:
-            print(f"Not expecting message from {message.author.id}")
+        except TypeError:
+            print(f"Not expecting message from {str(message.author)}")
 
 
 for f_name in os.listdir('commands'):
