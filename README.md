@@ -16,6 +16,8 @@ The Geek.Zone stand-up bot
     "msg1": "This is the first message to send.",
     "msg2": "This is the second message to send.",
     "msg3": "This is the third message to send.",
-    "msg4": "This is the fourth message to send."
+    "msg4": "This is the fourth message to send.",
+
+    "last": "This message will not expect a reply"
 }
 ```

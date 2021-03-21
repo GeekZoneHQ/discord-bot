@@ -10,5 +10,7 @@
     "msg1": "Good morning! How are you today?",
     "msg2": "What did you do this week?",
     "msg3": "What will you do in the coming week?",
-    "msg4": "Anything blocking your progress?"
+    "msg4": "Anything blocking your progress?",
+
+    "last": "Thank you for your responses! They have been noted!"
 }

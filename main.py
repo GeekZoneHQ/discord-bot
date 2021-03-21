@@ -165,6 +165,7 @@ async def on_message(message):
                     db.commit()
                 elif recent[2] == 4:
                     print(f'Received all messages from {str(message.author)}')
+                    await message.author.send(config["last"])
                     sql = (f'''SELECT text FROM user_response
                                WHERE user_id = {str(message.author.id)}
                                ORDER BY response_id DESC''')
